@@ -1,17 +1,12 @@
 ﻿using MaterialSkin;
 using MaterialSkin.Controls;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Data.SQLite;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
+using System.Threading;
 using System.Windows.Forms;
+using System.Data;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Linq;
 
 namespace WindowsFormsApp1
 {
@@ -42,6 +37,7 @@ namespace WindowsFormsApp1
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
         }
 
         private void Form3_Load(object sender, EventArgs e)
@@ -56,20 +52,22 @@ namespace WindowsFormsApp1
 
         private void FillTableData()
         {
-            var dt = Model.CurrentModel.ExecuteQueryWithResponse(
-                "SELECT дата_и_время, COUNT(id) FROM Расписание" +
-                " GROUP BY дата_и_время;"
-            );
+            // https://learn.microsoft.com/en-us/previous-versions/dotnet/netframework-4.0/5hh873ya(v=vs.100)?redirectedfrom=MSDN
+            // Для того, чтобы дни недели переводились на русский
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("ru-RU");
+
+            var dt = Model.CurrentModel.ExecuteQueryWithResponse("SELECT дата_и_время, id FROM Расписание");
 
             string[] N = new string[dt.Rows.Count];
             int[] M = new int[dt.Rows.Count];
 
+            var groupByDayOfWeek = dt.Rows.OfType<DataRow>()
+                .GroupBy(row => DateTime.Parse(row.ItemArray.First().ToString()).ToString("dddd"));
             // Set title.
             chart.Titles.Add("Самые загруженные дни");
-            for (int i = 0; i < dt.Rows.Count; i++)
-            {
-                Series series = chart.Series.Add(dt.Rows[i][0].ToString());
-                series.Points.Add(System.Convert.ToInt32(dt.Rows[i][1]));
+            foreach (var keyValuePair in groupByDayOfWeek) {
+                Series series = chart.Series.Add(keyValuePair.Key);
+                series.Points.Add(keyValuePair.Count());
             }
         }
     }

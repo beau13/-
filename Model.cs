@@ -65,10 +65,56 @@ namespace WindowsFormsApp1
             sqlite.Close();
         }
 
+        public void UpdateWithDT(DataTable dt, string tableName) {
+            string desroySql = $"DELETE FROM {tableName};";
+            ExecuteQuery(desroySql);
+
+            // Нашла в интернете
+            var columnNames = dt.Columns.OfType<DataColumn>().Select((col) => col.ColumnName).Where(name => name != "id").ToList();
+            var values = dt.Rows.OfType<DataRow>()
+                .Where(row => !row.ItemArray.Skip(1).All(item => string.IsNullOrEmpty(item.ToString())))
+                .Select(row => row.ItemArray.Skip(1).Select(item => $"'{item}'").ToList())
+                .Select(row => $"({string.Join(", ", row)})")
+                .ToList();
+
+            string sql = $"INSERT INTO {tableName} ({string.Join(", ", columnNames)}) VALUES {string.Join(", ", values)};";
+
+            ExecuteQuery(sql);
+
+        }
+
+        public DataTable getTableData(string tableName, string[] searchColumns = null, string search = null) {
+
+            if (string.IsNullOrEmpty(search) || searchColumns == null) {
+                var dataTableSelect = this.ExecuteQueryWithResponse($@"
+                    SELECT *
+                    FROM {tableName};      
+                ");  //обращаемся к методу
+
+                return dataTableSelect;
+            }
+
+            else {
+                var first = searchColumns.Take(1).Select((col) => $"WHERE {col} LIKE @search").First();
+                var other = searchColumns.Skip(1).Select((col) => $"OR {col} LIKE @search").ToList();
+
+                string query = $"SELECT * FROM {tableName} {first} {string.Join(" ", other)};";
+                var dataTableSelect = this.ExecuteQueryWithResponse(query,
+                    new Dictionary<string, object>() {
+                        {"@search", $"%{search}%"},
+                    });
+
+                return dataTableSelect;
+            }
+        }
+
 
         // НАПОМИНАНИЯ
+        // TODO: удалить старые методы, переделать все формы
         public void addTask(string dateTime, string notify)
         {
+            throw new NotImplementedException();
+
             string query = "INSERT INTO Напоминания( дата_и_время, напоминание) VALUES ('"
                 + dateTime
                 + "','"
@@ -78,13 +124,14 @@ namespace WindowsFormsApp1
         }
         public void deleteTask(int id)
         {
+            throw new NotImplementedException();
             string query = $"DELETE FROM Напоминания WHERE id = {id}";
 
             this.ExecuteQuery(query);
         }
         public DataTable SearchTasks(string search = null)
         {
-
+            throw new NotImplementedException();
             if (search == null || search == "")
             {
                 var dataTableSelect = this.ExecuteQueryWithResponse(@"      
@@ -112,6 +159,7 @@ namespace WindowsFormsApp1
 
         public void updateTask(int id, string dateTime, string notify)
         {
+            throw new NotImplementedException();
             string query = $"UPDATE Напоминания SET дата_и_время = @datetime," +
                            $"напоминание = @notify " +
                            $"WHERE id = {id}";
@@ -129,6 +177,7 @@ namespace WindowsFormsApp1
         // РАСПИСАНИЕ
         public void addTimetable(string dateTime, string notify)
         {
+            throw new NotImplementedException();
             string query = "INSERT INTO Расписание( дата_и_время, задача) VALUES ('"
                 + dateTime
                 + "','"
@@ -139,6 +188,7 @@ namespace WindowsFormsApp1
         }
         public void deleteTimetable(int id)
         {
+            throw new NotImplementedException();
             string query = $"DELETE FROM Расписание WHERE id = {id}";
 
             this.ExecuteQuery(query);
@@ -146,6 +196,7 @@ namespace WindowsFormsApp1
 
         public void updateTimetable(int id, string dateTime, string notify)
         {
+            throw new NotImplementedException();
             string query = $"UPDATE Расписание SET дата_и_время = @datetime," +
                            $"задача = @notify " +
                            $"WHERE id = {id}";
@@ -160,6 +211,7 @@ namespace WindowsFormsApp1
 
         public DataTable getTimetable(string search = null)
         {
+            throw new NotImplementedException();
 
             if (search == null || search == "")
             {
@@ -190,6 +242,7 @@ namespace WindowsFormsApp1
         // ЗАМЕТКИ
         public void addNote(string note)
         {
+            throw new NotImplementedException();
             string query = "INSERT INTO Заметки(Заметки) VALUES ('" + note + "')";
 
             this.ExecuteQuery(query);
@@ -197,6 +250,7 @@ namespace WindowsFormsApp1
         }
         public void deleteNote(int id)
         {
+            throw new NotImplementedException();
             string query = $"DELETE FROM Заметки WHERE id = {id}";
 
             this.ExecuteQuery(query);
@@ -204,6 +258,7 @@ namespace WindowsFormsApp1
 
         public void updateNote(int id, string note)
         {
+            throw new NotImplementedException();
             string query = $"UPDATE Заметки SET Заметки = @note  " +
                            $"WHERE id = {id}";
 
@@ -215,7 +270,7 @@ namespace WindowsFormsApp1
         }
         public DataTable SearchNote(string search = null)
         {
-
+            throw new NotImplementedException();
             if (search == null || search == "")
             {
                 var dataTableSelect = this.ExecuteQueryWithResponse(@"      
@@ -244,6 +299,7 @@ namespace WindowsFormsApp1
         // КОНТАКТЫ
         public void addContact(string name, string address, int phone, string email)
         {
+            throw new NotImplementedException();
             string query = "INSERT INTO Контакты(Имя, Адрес, Номер_телефона, email_почта) VALUES ('"
                 + name
                 + "','"
@@ -257,6 +313,7 @@ namespace WindowsFormsApp1
         }
         public void deleteContact(int id)
         {
+            throw new NotImplementedException();
             string query = $"DELETE FROM Контакты WHERE id = {id}";
 
             this.ExecuteQuery(query);
@@ -264,6 +321,7 @@ namespace WindowsFormsApp1
 
         public void updateContact(int id, string name, string address, int phone, string email)
         {
+            throw new NotImplementedException();
             string query = $"UPDATE Контакты SET Имя = @name," +
                            $"Адрес = @address," +
                            $"Номер_телефона = @phone," +
@@ -282,7 +340,7 @@ namespace WindowsFormsApp1
 
         public DataTable SearchContact(string search = null)
         {
-
+            throw new NotImplementedException();
             if (search == null || search == "")
             {
                 var dataTableSelect = this.ExecuteQueryWithResponse(@"      

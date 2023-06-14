@@ -18,11 +18,11 @@ using MaterialSkin.Controls;
 
 namespace WindowsFormsApp1
 {
-    public partial class TableForm : MaterialForm
-    {
-        private SQLiteConnection sqlite;
-
+    public partial class TableForm : MaterialForm {
         readonly MaterialSkin.MaterialSkinManager materialSkinManager;
+        private DataTable dt;
+        private readonly string tableName = "Расписание";
+        private readonly string[] searchColumns = {"дата_и_время", "задача" };
 
         public TableForm()
         {
@@ -35,53 +35,18 @@ namespace WindowsFormsApp1
             materialSkinManager.ColorScheme = new MaterialSkin.ColorScheme(MaterialSkin.Primary.Indigo500, MaterialSkin.Primary.Indigo700, MaterialSkin.Primary.Indigo100, MaterialSkin.Accent.Pink200, MaterialSkin.TextShade.WHITE);
 
 
-            dgv.CellBeginEdit += dgv_CellBeginEdit;    //cобытия
-            dgv.CellValidating += dgv_CellValidating;
-            dgv.CellEndEdit += dgv_CellEndEdit;
 
             UpdateToModel();
         }
         private void UpdateToModel(string query = null)
         {
-            BindingSource SBind = new BindingSource();
+            //BindingSource SBind = new BindingSource();
 
-            SBind.DataSource = Model.CurrentModel.getTimetable(query);  // устанавливаем источник данных для адаптера
-
-            dgv.DataSource = SBind;
+            dt = Model.CurrentModel.getTableData(tableName, searchColumns, query);  // устанавливаем источник данных для адаптера
+            // SBind.DataSource = dt;
+            dgv.DataSource = dt;
+            dgv.Columns["id"].Visible = false;
             dgv.Refresh();   //обновляем
-        }
-
-        private void dgv_CellBeginEdit(Object sender, DataGridViewCellCancelEventArgs e)
-        {
-            //Здесь мы сохраняем текущее значение ячейки в какую-то переменную, которую потом мы можем сравнить с новым значением
-            //Например, использование свойства dgv.Tag
-            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
-            {
-                this.dgv.Tag = this.dgv.CurrentCell.Value;
-                //или передать отправителя в переменную DataGridView
-                //->, чем этот обработчик может быть использован в другом представлении данных
-            }
-        }
-
-        private void dgv_CellValidating(Object sender, DataGridViewCellValidatingEventArgs e)
-        {
-            if (this.dgv.Tag == this.dgv.CurrentCell.Value)
-                e.Cancel = true;    
-
-            try
-            {
-                System.Convert.ToInt32(this.dgv.CurrentCell.Value);
-            }
-            catch
-            {
-                e.Cancel = true;
-            }
-        }
-
-        private void dgv_CellEndEdit(Object sender, DataGridViewCellEventArgs e)
-        {
-            //Поскольку событие CellEndEdit происходит после события CellValidating(если не отменено)
-            ///Здесь вы можете обновить новое значение в базу данных
         }
 
         private void searchButton_Click(object sender, EventArgs e)
@@ -100,52 +65,9 @@ namespace WindowsFormsApp1
         {
             try
             {
-                Model.CurrentModel.addTimetable(timeTextBox1.Text, addTextBox1.Text);
-
-                UpdateToModel();
-
-                MessageBox.Show("Запись была успешно добавлена в расписание");
-            }
-            catch
-            {
-                MessageBox.Show("Непраивльно введены данные");
-            }
-        }
-
-        private void materialButton2_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                int id = Convert.ToInt32(idTextBox.Text);
-                //Model.CurrentModel.deleteTimetable(id);
-
-                UpdateToModel();
-
-                MessageBox.Show("Запись была успешно удалена");
-            }
-            catch
-            {
-                MessageBox.Show("Непраивльно введены данные");
-            }
-
-        }
-
-        private void label4_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void materialButton3_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                int id = Convert.ToInt32(materialTextBox.Text);
-                string time = Convert.ToString(timeTextBox1.Text);
-                Model.CurrentModel.updateTimetable(id, time, addTextBox1.Text);
-
-                UpdateToModel();
-
-                MessageBox.Show("Запись была успешно редактирована");
+                var dt = (DataTable)dgv.DataSource;
+                Model.CurrentModel.UpdateWithDT(dt, tableName);
+                MessageBox.Show("Расписание успешно сохранено");
             }
             catch
             {
@@ -155,6 +77,10 @@ namespace WindowsFormsApp1
 
         private void TableForm_Load(object sender, EventArgs e)
         {
+
+        }
+
+        private void dgv_SelectionChanged(object sender, EventArgs e) {
 
         }
     }
