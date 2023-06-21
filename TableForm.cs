@@ -34,16 +34,11 @@ namespace WindowsFormsApp1
             materialSkinManager.Theme = MaterialSkin.MaterialSkinManager.Themes.LIGHT;
             materialSkinManager.ColorScheme = new MaterialSkin.ColorScheme(MaterialSkin.Primary.Indigo500, MaterialSkin.Primary.Indigo700, MaterialSkin.Primary.Indigo100, MaterialSkin.Accent.Pink200, MaterialSkin.TextShade.WHITE);
 
-
-
             UpdateToModel();
         }
         private void UpdateToModel(string query = null)
         {
-            //BindingSource SBind = new BindingSource();
-
-            dt = Model.CurrentModel.getTableData(tableName, searchColumns, query);  // устанавливаем источник данных для адаптера
-            // SBind.DataSource = dt;
+            dt = Model.CurrentModel.getTableData(tableName, searchColumns, query);  // 
             dgv.DataSource = dt;
             dgv.Columns["id"].Visible = false;
             dgv.Refresh();   //обновляем
@@ -65,9 +60,9 @@ namespace WindowsFormsApp1
         {
             try
             {
-                var dt = (DataTable)dgv.DataSource;
-                Model.CurrentModel.UpdateWithDT(dt, tableName);
-                MessageBox.Show("Расписание успешно сохранено");
+                var dt = (DataTable)dgv.DataSource;  //источник данных
+                Model.CurrentModel.UpdateWithDT(dt, tableName); //вызываем метод для сохранения изменений
+                MessageBox.Show("Расписание успешно сохранено"); 
             }
             catch
             {

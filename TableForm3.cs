@@ -15,6 +15,7 @@ using System.IO;
 using System.Threading;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using MaterialSkin.Controls;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 
 namespace WindowsFormsApp1
@@ -22,17 +23,14 @@ namespace WindowsFormsApp1
 
     public partial class TableForm3 : MaterialForm
     {
-        private SQLiteConnection sqlite;
-
         readonly MaterialSkin.MaterialSkinManager materialSkinManager;
+        private DataTable dt;
+        private readonly string tableName = "Заметки";
+        private readonly string[] searchColumns = { "Заметки"};
 
         public TableForm3()
         {
             InitializeComponent();
-
-            dgv3.CellBeginEdit += dgv_CellBeginEdit;    //cобытия
-            dgv3.CellValidating += dgv_CellValidating;
-            dgv3.CellEndEdit += dgv_CellEndEdit;
 
             materialSkinManager = MaterialSkin.MaterialSkinManager.Instance;
             materialSkinManager.EnforceBackcolorOnAllComponents = true;
@@ -45,77 +43,13 @@ namespace WindowsFormsApp1
 
         private void UpdateToModel(string search = null)
         {
-            BindingSource SBind = new BindingSource();
+            //BindingSource SBind = new BindingSource();
 
-            SBind.DataSource = Model.CurrentModel.SearchNote(search);  // устанавливаем источник данных для адаптера
-
-            dgv3.DataSource = SBind;
+            dt = Model.CurrentModel.getTableData(tableName, searchColumns);  // устанавливаем источник данных для адаптера
+            // SBind.DataSource = dt;
+            dgv3.DataSource = dt;
+            dgv3.Columns["id"].Visible = false;
             dgv3.Refresh();   //обновляем
-        }
-
-        private void dgv_CellBeginEdit(Object sender, DataGridViewCellCancelEventArgs e)
-        {
-            //Здесь мы сохраняем текущее значение ячейки в какую-то переменную, которую потом мы можем сравнить с новым значением
-            //Например, использование свойства dgv.Tag
-            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
-            {
-                this.dgv3.Tag = this.dgv3.CurrentCell.Value;
-                //или передать отправителя в переменную DataGridView
-                //->, чем этот обработчик может быть использован в другом представлении данных
-            }
-        }
-
-        private void dgv_CellValidating(Object sender, DataGridViewCellValidatingEventArgs e)
-        {
-            //Здесь можем добавить всевозможные проверки для нового значения 
-            //Например, просто сравнить со старым значением и проверить, больше ли оно 0
-            if (this.dgv3.Tag == this.dgv3.CurrentCell.Value)
-                e.Cancel = true;
-
-            try
-            {
-                System.Convert.ToInt32(this.dgv3.CurrentCell.Value);
-            }
-            catch
-            {
-                e.Cancel = true;
-            }
-        }
-
-        private void dgv_CellEndEdit(Object sender, DataGridViewCellEventArgs e)
-        {
-            //Поскольку событие CellEndEdit происходит после события CellValidating(если не отменено)
-            ///Здесь вы можете обновить новое значение в базу данных
-        }
-
-        private void addButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Model.CurrentModel.addNote(noteTextBox.Text);
-
-                UpdateToModel();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void deleteButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-
-                int id = Convert.ToInt32(idTextBox3.Text);
-                Model.CurrentModel.deleteNote(id);
-
-                UpdateToModel();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         private void searchButton_Click(object sender, EventArgs e)
@@ -130,25 +64,25 @@ namespace WindowsFormsApp1
             }
         }
 
-        private void materialButton1_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                int id = Convert.ToInt32(materialTextBox1.Text);
-                string note = Convert.ToString(noteTextBox.Text);
-                Model.CurrentModel.updateNote(id, note);
-
-                UpdateToModel();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+ 
 
         private void TableForm3_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void preservebutton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var dt = (DataTable)dgv3.DataSource;
+                Model.CurrentModel.UpdateWithDT(dt, tableName);
+                MessageBox.Show("Заметки успешно сохранены");
+            }
+            catch
+            {
+                MessageBox.Show("Непраивльно введены данные");
+            }
         }
     }
 }

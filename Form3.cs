@@ -65,6 +65,7 @@ namespace WindowsFormsApp1
                 .GroupBy(row => DateTime.Parse(row.ItemArray.First().ToString()).ToString("dddd"));
             // Set title.
             chart.Titles.Add("Самые загруженные дни");
+            chart.ChartAreas[0].AxisY.Title = "Кол-во задач";
             foreach (var keyValuePair in groupByDayOfWeek) {
                 Series series = chart.Series.Add(keyValuePair.Key);
                 series.Points.Add(keyValuePair.Count());
